@@ -1,19 +1,27 @@
-apiVersion: tests.testkube.io/v3
-kind: TestSuite
+apiVersion: testworkflows.testkube.io/v1
+kind: TestWorkflow
 metadata:
   name: task-manager-suite
   namespace: testkube
   labels:
     app: task-manager
 spec:
-  description: "Full test suite for Task Manager — unit, integration, and E2E"
   steps:
-    - stopOnFailure: true
+    # Unit tests — abort if they fail
+    - name: Unit tests
       execute:
-        - test: task-manager-unit
-    - stopOnFailure: true
+        workflows:
+          - name: task-manager-unit
+
+    # Integration tests — abort if they fail
+    - name: Integration tests
       execute:
-        - test: task-manager-integration
-    - stopOnFailure: false
+        workflows:
+          - name: task-manager-integration
+
+    # E2E tests — run regardless of above (collect report either way)
+    - name: E2E tests
+      condition: always
       execute:
-        - test: task-manager-e2e
+        workflows:
+          - name: task-manager-e2e

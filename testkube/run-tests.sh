@@ -7,14 +7,13 @@
 #
 # Prerequisites:
 #   - kubectl configured and pointing at your cluster
-#   - Testkube CLI installed (https://docs.testkube.io/installing)
+#   - Testkube CLI 2.x installed (https://docs.testkube.io/installing)
 #   - Testkube deployed in the "testkube" namespace
 # ============================================================
 
 set -euo pipefail
 
 NAMESPACE="testkube"
-SUITE="task-manager-suite"
 MANIFESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
 MODE="${1:-all}"
 
@@ -28,44 +27,48 @@ check_deps() {
 }
 
 apply_manifests() {
-  log "Applying Testkube manifests..."
-  kubectl apply -f "${MANIFESTS_DIR}/test-unit.yaml"
-  kubectl apply -f "${MANIFESTS_DIR}/test-integration.yaml"
-  kubectl apply -f "${MANIFESTS_DIR}/test-e2e.yaml"
-  kubectl apply -f "${MANIFESTS_DIR}/testsuite.yaml"
+  log "Applying TestWorkflow manifests..."
+  testkube create testworkflow \
+    --file "${MANIFESTS_DIR}/test-unit.yaml" \
+    --namespace "${NAMESPACE}" \
+    --update
+
+  testkube create testworkflow \
+    --file "${MANIFESTS_DIR}/test-integration.yaml" \
+    --namespace "${NAMESPACE}" \
+    --update
+
+  testkube create testworkflow \
+    --file "${MANIFESTS_DIR}/test-e2e.yaml" \
+    --namespace "${NAMESPACE}" \
+    --update
+
+  testkube create testworkflow \
+    --file "${MANIFESTS_DIR}/testsuite.yaml" \
+    --namespace "${NAMESPACE}" \
+    --update
+
   log "Manifests applied."
 }
 
-run_test() {
-  local test_name="$1"
-  log "Running test: ${test_name}"
-  testkube run test "${test_name}" \
+run_workflow() {
+  local workflow_name="$1"
+  log "Running TestWorkflow: ${workflow_name}"
+  testkube run testworkflow "${workflow_name}" \
     --namespace "${NAMESPACE}" \
-    --watch \
-    --verbose
-}
-
-run_suite() {
-  log "Running full test suite: ${SUITE}"
-  testkube run testsuite "${SUITE}" \
-    --namespace "${NAMESPACE}" \
-    --watch \
-    --verbose
+    --watch
 }
 
 print_results() {
-  log "Fetching recent test results..."
-  echo ""
-  echo "--- Unit test results ---"
-  testkube get testexecutions --test task-manager-unit --namespace "${NAMESPACE}" --limit 1 2>/dev/null || true
-
-  echo ""
-  echo "--- Integration test results ---"
-  testkube get testexecutions --test task-manager-integration --namespace "${NAMESPACE}" --limit 1 2>/dev/null || true
-
-  echo ""
-  echo "--- E2E test results ---"
-  testkube get testexecutions --test task-manager-e2e --namespace "${NAMESPACE}" --limit 1 2>/dev/null || true
+  log "Fetching latest execution results..."
+  for name in task-manager-unit task-manager-integration task-manager-e2e; do
+    echo ""
+    echo "--- ${name} ---"
+    testkube get testworkflowexecution \
+      --namespace "${NAMESPACE}" \
+      --testworkflow "${name}" \
+      --limit 1 2>/dev/null || true
+  done
 }
 
 # ---- Main ----
@@ -74,16 +77,16 @@ apply_manifests
 
 case "${MODE}" in
   unit)
-    run_test "task-manager-unit"
+    run_workflow "task-manager-unit"
     ;;
   integration)
-    run_test "task-manager-integration"
+    run_workflow "task-manager-integration"
     ;;
   e2e)
-    run_test "task-manager-e2e"
+    run_workflow "task-manager-e2e"
     ;;
   all)
-    run_suite
+    run_workflow "task-manager-suite"
     ;;
   *)
     err "Unknown mode '${MODE}'. Use: unit | integration | e2e | all"

@@ -1,5 +1,5 @@
-apiVersion: tests.testkube.io/v3
-kind: Test
+apiVersion: testworkflows.testkube.io/v1
+kind: TestWorkflow
 metadata:
   name: task-manager-integration
   namespace: testkube
@@ -7,26 +7,19 @@ metadata:
     app: task-manager
     type: integration
 spec:
-  type: nodejs/jest
   content:
-    type: git
-    repository:
-      type: git
+    git:
       uri: https://github.com/jonmell78/testkube.git
-      branch: main
-      path: "."
-  executionRequest:
-    name: task-manager-integration-run
+      revision: main
+  container:
     image: node:22-alpine
-    command:
-      - sh
-      - -c
-      - "npm ci && npm run test:integration -- --ci --reporters=default --reporters=jest-junit"
-    envs:
-      NODE_ENV: "test"
-    artifactRequest:
-      storageClassName: standard
-      volumeMountPath: /data/artifacts
-      dirs:
-        - coverage
-        - junit.xml
+    workingDir: /data/repo
+  steps:
+    - name: Install dependencies
+      shell: npm ci
+
+    - name: Run integration tests
+      shell: npm run test:integration -- --ci
+      env:
+        - name: NODE_ENV
+          value: test
