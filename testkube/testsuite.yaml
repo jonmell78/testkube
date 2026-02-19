@@ -1,4 +1,4 @@
-apiVersion: tests.testkube.io/v2
+apiVersion: tests.testkube.io/v3
 kind: TestSuite
 metadata:
   name: task-manager-suite
@@ -10,16 +10,10 @@ spec:
   steps:
     - stopOnFailure: true
       execute:
-        - test:
-            name: task-manager-unit
-            namespace: testkube
+        - test: task-manager-unit
     - stopOnFailure: true
       execute:
-        - test:
-            name: task-manager-integration
-            namespace: testkube
+        - test: task-manager-integration
     - stopOnFailure: false
       execute:
-        - test:
-            name: task-manager-e2e
-            namespace: testkube
+        - test: task-manager-e2e
