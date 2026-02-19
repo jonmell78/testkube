@@ -17,7 +17,31 @@ spec:
       uri: https://github.com/jonmell78/testkube.git
       revision: main
 
-  # Shared defaults for all steps
+  # App sidecar used by the E2E steps
+  services:
+    app:
+      image: node:22-alpine
+      content:
+        git:
+          uri: https://github.com/jonmell78/testkube.git
+          revision: main
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 3000
+        periodSeconds: 2
+        failureThreshold: 15
+      container:
+        workingDir: /data/repo
+        env:
+          - name: PORT
+            value: "3000"
+          - name: NODE_ENV
+            value: test
+          - name: DB_PATH
+            value: /tmp/test-e2e.db
+      shell: npm ci && node src/server.js
+
   container:
     workingDir: /data/repo
 
@@ -70,6 +94,8 @@ spec:
           value: test
         - name: CI
           value: "true"
+        - name: PLAYWRIGHT_BASE_URL
+          value: "http://{{services.app.0.ip}}:3000"
 
     - name: Save Playwright artifacts
       condition: always

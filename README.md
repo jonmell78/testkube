@@ -6,17 +6,28 @@ A CRUD task manager web app built with Node.js, Express, and SQLite — with a c
 
 | Layer | Technology |
 |-------|-----------|
-| Runtime | Node.js 20 |
+| Runtime | Node.js 22 |
 | Framework | Express 4 |
 | Database | SQLite (better-sqlite3) |
 | Validation | express-validator |
 | Unit tests | Jest |
 | Integration tests | Jest + Supertest |
 | E2E tests | Playwright |
+| Container | Docker + Docker Compose |
 | CI | GitHub Actions |
 | Test orchestration | Testkube |
 
 ## Getting started
+
+### With Docker (recommended)
+
+```bash
+docker compose up --build   # http://localhost:3000
+```
+
+The SQLite database is persisted in a named Docker volume (`db-data`).
+
+### Without Docker
 
 ```bash
 npm install
@@ -61,9 +72,23 @@ npm run test:coverage     # unit + integration with coverage report
 }
 ```
 
+## Docker
+
+```bash
+# Build the image
+docker build -t task-manager .
+
+# Run with a persistent DB volume
+docker run -d -p 3000:3000 -v task-db:/app/data task-manager
+
+# Or use compose (builds automatically)
+docker compose up --build -d
+docker compose down
+```
+
 ## Testkube
 
-Tests are defined as Testkube `Test` and `TestSuite` manifests in `testkube/`.
+Tests are defined as Testkube `TestWorkflow` manifests in `testkube/`.
 
 ### Apply manifests and run
 
@@ -107,6 +132,9 @@ Tests are defined as Testkube `Test` and `TestSuite` manifests in `testkube/`.
 │   ├── test-e2e.yaml
 │   ├── testsuite.yaml
 │   └── run-tests.sh
+├── Dockerfile
+├── docker-compose.yml
+├── .dockerignore
 └── .github/
     └── workflows/
         └── ci.yml

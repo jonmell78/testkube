@@ -3,5 +3,10 @@ node_modules/
 coverage/
 playwright-report/
 test-results/
-.DS_Store
-data/
+tests/
+.github/
+testkube/
+.claude/
+.git/
+.gitignore
+*.md
