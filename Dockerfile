@@ -28,11 +28,13 @@ COPY src/ ./src/
 COPY public/ ./public/
 COPY package.json ./
 
-# DB lives on a volume so it survives container restarts
-VOLUME ["/app/data"]
+# Create the data directory and set ownership before switching user.
+# The VOLUME instruction is intentionally omitted here — declaring it in
+# the Dockerfile causes Docker to create the mount point after the chown,
+# making the directory root-owned at runtime. The volume is declared in
+# docker-compose.yml instead.
+RUN mkdir -p /app/data && chown -R appuser:appgroup /app
 ENV DB_PATH=/app/data/tasks.db
-
-RUN chown -R appuser:appgroup /app
 USER appuser
 
 EXPOSE 3000
