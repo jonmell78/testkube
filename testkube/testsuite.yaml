@@ -1,0 +1,25 @@
+apiVersion: tests.testkube.io/v2
+kind: TestSuite
+metadata:
+  name: task-manager-suite
+  namespace: testkube
+  labels:
+    app: task-manager
+spec:
+  description: "Full test suite for Task Manager — unit, integration, and E2E"
+  steps:
+    - stopOnFailure: true
+      execute:
+        - test:
+            name: task-manager-unit
+            namespace: testkube
+    - stopOnFailure: true
+      execute:
+        - test:
+            name: task-manager-integration
+            namespace: testkube
+    - stopOnFailure: false
+      execute:
+        - test:
+            name: task-manager-e2e
+            namespace: testkube

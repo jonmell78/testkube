@@ -1,0 +1,32 @@
+apiVersion: tests.testkube.io/v3
+kind: Test
+metadata:
+  name: task-manager-unit
+  namespace: testkube
+  labels:
+    app: task-manager
+    type: unit
+spec:
+  type: nodejs/jest
+  content:
+    type: git
+    repository:
+      type: git
+      uri: https://github.com/jonmell78/testkube.git
+      branch: main
+      path: "."
+  executionRequest:
+    name: task-manager-unit-run
+    image: node:22-alpine
+    command:
+      - sh
+      - -c
+      - "npm ci && npm run test:unit -- --ci --reporters=default --reporters=jest-junit"
+    envs:
+      NODE_ENV: "test"
+    artifactRequest:
+      storageClassName: standard
+      volumeMountPath: /data/artifacts
+      dirs:
+        - coverage
+        - junit.xml

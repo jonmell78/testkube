@@ -1,0 +1,33 @@
+apiVersion: tests.testkube.io/v3
+kind: Test
+metadata:
+  name: task-manager-e2e
+  namespace: testkube
+  labels:
+    app: task-manager
+    type: e2e
+spec:
+  type: playwright/test
+  content:
+    type: git
+    repository:
+      type: git
+      uri: https://github.com/jonmell78/testkube.git
+      branch: main
+      path: "."
+  executionRequest:
+    name: task-manager-e2e-run
+    image: mcr.microsoft.com/playwright:v1.42.1-jammy
+    command:
+      - sh
+      - -c
+      - "npm ci && npx playwright install --with-deps chromium && npm run test:e2e -- --reporter=list,junit"
+    envs:
+      NODE_ENV: "test"
+      CI: "true"
+    artifactRequest:
+      storageClassName: standard
+      volumeMountPath: /data/artifacts
+      dirs:
+        - playwright-report
+        - test-results
