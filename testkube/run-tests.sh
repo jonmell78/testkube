@@ -61,7 +61,8 @@ run_workflow() {
 
 print_results() {
   log "Fetching latest execution results..."
-  for name in task-manager-unit task-manager-integration task-manager-e2e; do
+  local workflows=("task-manager-unit" "task-manager-integration" "task-manager-e2e" "task-manager-suite")
+  for name in "${workflows[@]}"; do
     echo ""
     echo "--- ${name} ---"
     testkube get testworkflowexecution \

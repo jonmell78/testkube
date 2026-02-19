@@ -1,3 +1,9 @@
+# Full test suite for standalone Testkube agent.
+#
+# Note: the `execute: workflows:` orchestration pattern requires Testkube Pro/Cloud.
+# In standalone mode all steps must be inlined into a single TestWorkflow.
+# The individual task-manager-unit/integration/e2e workflows still exist for
+# running tests in isolation; this workflow runs all three in sequence.
 apiVersion: testworkflows.testkube.io/v1
 kind: TestWorkflow
 metadata:
@@ -6,22 +12,70 @@ metadata:
   labels:
     app: task-manager
 spec:
+  content:
+    git:
+      uri: https://github.com/jonmell78/testkube.git
+      revision: main
+
+  # Shared defaults for all steps
+  container:
+    workingDir: /data/repo
+
   steps:
-    # Unit tests — abort if they fail
-    - name: Unit tests
-      execute:
-        workflows:
-          - name: task-manager-unit
+    # ── Unit tests ──────────────────────────────────────────────
+    - name: Install dependencies (unit)
+      container:
+        image: node:22-alpine
+      shell: npm ci
 
-    # Integration tests — abort if they fail
-    - name: Integration tests
-      execute:
-        workflows:
-          - name: task-manager-integration
+    - name: Run unit tests
+      container:
+        image: node:22-alpine
+      shell: npm run test:unit -- --ci --coverage
+      env:
+        - name: NODE_ENV
+          value: test
 
-    # E2E tests — run regardless of above (collect report either way)
-    - name: E2E tests
+    - name: Save unit coverage
       condition: always
-      execute:
-        workflows:
-          - name: task-manager-e2e
+      container:
+        image: node:22-alpine
+      artifacts:
+        paths:
+          - coverage/**/*
+
+    # ── Integration tests ────────────────────────────────────────
+    - name: Run integration tests
+      container:
+        image: node:22-alpine
+      shell: npm run test:integration -- --ci
+      env:
+        - name: NODE_ENV
+          value: test
+
+    # ── E2E tests ─────────────────────────────────────────────────
+    - name: Install Playwright browsers
+      condition: always
+      container:
+        image: mcr.microsoft.com/playwright:v1.42.1-jammy
+      shell: npm ci && npx playwright install --with-deps chromium
+
+    - name: Run E2E tests
+      condition: always
+      container:
+        image: mcr.microsoft.com/playwright:v1.42.1-jammy
+      shell: npm run test:e2e
+      env:
+        - name: NODE_ENV
+          value: test
+        - name: CI
+          value: "true"
+
+    - name: Save Playwright artifacts
+      condition: always
+      container:
+        image: mcr.microsoft.com/playwright:v1.42.1-jammy
+      artifacts:
+        paths:
+          - playwright-report/**/*
+          - test-results/**/*
