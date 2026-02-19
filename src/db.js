@@ -1,8 +1,4 @@
-// Uses the built-in node:sqlite module (Node 22+)
-// Suppress the experimental warning in non-production environments
-process.env.NODE_NO_WARNINGS = process.env.NODE_NO_WARNINGS || '1';
-
-const { DatabaseSync } = require('node:sqlite');
+const Database = require('better-sqlite3');
 const path = require('path');
 
 const DB_PATH = process.env.DB_PATH || path.join(__dirname, '..', 'tasks.db');
@@ -11,7 +7,9 @@ let db;
 
 function getDb() {
   if (!db) {
-    db = new DatabaseSync(DB_PATH);
+    db = new Database(DB_PATH);
+    db.pragma('journal_mode = WAL');
+    db.pragma('foreign_keys = ON');
     initSchema(db);
   }
   return db;
