@@ -13,7 +13,6 @@
     "test:coverage": "jest --coverage --runInBand --forceExit"
   },
   "dependencies": {
-    "better-sqlite3": "^9.4.3",
     "express": "^4.18.2",
     "express-validator": "^7.0.1",
     "morgan": "^1.10.0",
@@ -36,6 +35,10 @@
       "!src/server.js"
     ],
     "coverageDirectory": "coverage",
-    "coverageReporters": ["text", "lcov", "json"]
+    "coverageReporters": [
+      "text",
+      "lcov",
+      "json"
+    ]
   }
 }

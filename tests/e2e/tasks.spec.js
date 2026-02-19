@@ -200,7 +200,7 @@ test.describe('Modal cancel', () => {
   test('closes modal when backdrop is clicked', async ({ page }) => {
     await page.goto('/');
     await page.click('[data-testid="btn-new-task"]');
-    await page.click('#modal-backdrop');
+    await page.click('#modal-backdrop', { position: { x: 5, y: 5 } });
     await expect(page.locator('#modal')).not.toBeVisible();
   });
 });

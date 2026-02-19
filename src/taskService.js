@@ -7,17 +7,17 @@ function getAllTasks(filters = {}) {
   const params = {};
 
   if (filters.status) {
-    query += ' AND status = @status';
-    params.status = filters.status;
+    query += ' AND status = $status';
+    params.$status = filters.status;
   }
   if (filters.priority) {
-    query += ' AND priority = @priority';
-    params.priority = filters.priority;
+    query += ' AND priority = $priority';
+    params.$priority = filters.priority;
   }
   if (filters.search) {
-    query += ' AND (title LIKE @search1 OR description LIKE @search2)';
-    params.search1 = `%${filters.search}%`;
-    params.search2 = `%${filters.search}%`;
+    query += ' AND (title LIKE $search1 OR description LIKE $search2)';
+    params.$search1 = `%${filters.search}%`;
+    params.$search2 = `%${filters.search}%`;
   }
 
   query += ' ORDER BY created_at DESC';
@@ -26,7 +26,7 @@ function getAllTasks(filters = {}) {
 
 function getTaskById(id) {
   const db = getDb();
-  return db.prepare('SELECT * FROM tasks WHERE id = @id').get({ id }) || null;
+  return db.prepare('SELECT * FROM tasks WHERE id = $id').get({ $id: id }) || null;
 }
 
 function createTask(data) {
@@ -47,8 +47,17 @@ function createTask(data) {
 
   db.prepare(`
     INSERT INTO tasks (id, title, description, status, priority, due_date, created_at, updated_at)
-    VALUES (@id, @title, @description, @status, @priority, @due_date, @created_at, @updated_at)
-  `).run(task);
+    VALUES ($id, $title, $description, $status, $priority, $due_date, $created_at, $updated_at)
+  `).run({
+    $id: task.id,
+    $title: task.title,
+    $description: task.description,
+    $status: task.status,
+    $priority: task.priority,
+    $due_date: task.due_date,
+    $created_at: task.created_at,
+    $updated_at: task.updated_at,
+  });
 
   return task;
 }
@@ -67,21 +76,29 @@ function updateTask(id, data) {
 
   db.prepare(`
     UPDATE tasks
-    SET title = @title,
-        description = @description,
-        status = @status,
-        priority = @priority,
-        due_date = @due_date,
-        updated_at = @updated_at
-    WHERE id = @id
-  `).run(updated);
+    SET title = $title,
+        description = $description,
+        status = $status,
+        priority = $priority,
+        due_date = $due_date,
+        updated_at = $updated_at
+    WHERE id = $id
+  `).run({
+    $id: updated.id,
+    $title: updated.title,
+    $description: updated.description,
+    $status: updated.status,
+    $priority: updated.priority,
+    $due_date: updated.due_date,
+    $updated_at: updated.updated_at,
+  });
 
   return updated;
 }
 
 function deleteTask(id) {
   const db = getDb();
-  const result = db.prepare('DELETE FROM tasks WHERE id = @id').run({ id });
+  const result = db.prepare('DELETE FROM tasks WHERE id = $id').run({ $id: id });
   return result.changes > 0;
 }
 

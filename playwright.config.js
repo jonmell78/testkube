@@ -16,7 +16,7 @@ module.exports = defineConfig({
   },
   // Skip webServer when an external server URL is provided (e.g. Testkube sidecar)
   webServer: process.env.PLAYWRIGHT_BASE_URL ? undefined : {
-    command: 'DB_PATH=test-e2e.db PORT=3001 node src/server.js',
+    command: `DB_PATH=test-e2e.db PORT=3001 "${process.execPath}" src/server.js`,
     url: 'http://localhost:3001/health',
     reuseExistingServer: !process.env.CI,
     timeout: 15000,
