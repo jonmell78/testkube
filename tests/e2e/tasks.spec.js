@@ -1,6 +1,6 @@
 const { test, expect, request } = require('@playwright/test');
 
-const API = 'http://localhost:3001/api/tasks';
+const API = '/api/tasks';
 
 // Clean DB before each test via API
 test.beforeEach(async ({ request: apiRequest }) => {
