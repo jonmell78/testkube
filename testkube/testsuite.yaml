@@ -59,16 +59,21 @@ spec:
     - name: Install Playwright browsers
       condition: always
       container:
-        image: mcr.microsoft.com/playwright:v1.42.1-jammy
+        image: mcr.microsoft.com/playwright:v1.58.2-jammy
       shell: npm ci && npx playwright install --with-deps chromium
 
     - name: Run E2E tests
       condition: always
       container:
-        image: mcr.microsoft.com/playwright:v1.42.1-jammy
+        image: mcr.microsoft.com/playwright:v1.58.2-jammy
       shell: |
+        export DB_PATH=/tmp/test-e2e.db
+        export PORT=3000
+        export NODE_ENV=test
+        export CI=true
+        export PLAYWRIGHT_BASE_URL=http://localhost:3000
         # Start app server in background
-        DB_PATH=/tmp/test-e2e.db PORT=3000 NODE_ENV=test nohup node src/server.js > /tmp/app.log 2>&1 &
+        nohup node src/server.js > /tmp/app.log 2>&1 &
         APP_PID=$!
         # Wait up to 60s for the app to become ready
         for i in $(seq 1 60); do
@@ -76,12 +81,12 @@ spec:
           [ $i -eq 60 ] && { echo "App failed to start. Logs:"; cat /tmp/app.log; kill $APP_PID 2>/dev/null; exit 1; }
           sleep 1
         done
-        NODE_ENV=test CI=true PLAYWRIGHT_BASE_URL=http://localhost:3000 npm run test:e2e
+        npm run test:e2e
 
     - name: Save Playwright artifacts
       condition: always
       container:
-        image: mcr.microsoft.com/playwright:v1.42.1-jammy
+        image: mcr.microsoft.com/playwright:v1.58.2-jammy
       artifacts:
         paths:
           - playwright-report/**/*
