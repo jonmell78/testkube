@@ -19,10 +19,9 @@ spec:
       shell: npm ci
 
     - name: Run unit tests
-      shell: npm run test:unit -- --ci --coverage
-      env:
-        - name: NODE_ENV
-          value: test
+      shell: |
+        export NODE_ENV=test
+        npm run test:unit -- --ci --coverage
 
     - name: Save coverage artifacts
       condition: always

@@ -28,13 +28,10 @@ spec:
         export NODE_ENV=test
         export CI=true
         export PLAYWRIGHT_BASE_URL=http://localhost:3000
-        # Start app server in background
         nohup node src/server.js > /tmp/app.log 2>&1 &
-        APP_PID=$!
-        # Wait up to 60s for the app to become ready
         for i in $(seq 1 60); do
           curl -sf http://localhost:3000/health > /dev/null 2>&1 && { echo "App ready after ${i}s"; break; }
-          [ $i -eq 60 ] && { echo "App failed to start. Logs:"; cat /tmp/app.log; kill $APP_PID 2>/dev/null; exit 1; }
+          [ $i -eq 60 ] && { echo "App failed to start:"; cat /tmp/app.log; exit 1; }
           sleep 1
         done
         npm run test:e2e
