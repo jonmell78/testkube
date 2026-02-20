@@ -43,7 +43,7 @@ spec:
         npm run test:integration -- --ci
 
     # ── E2E tests ─────────────────────────────────────────────────
-    - name: Install Playwright dependencies
+    - name: Install Playwright dependencies and browsers
       condition: always
       container:
         image: mcr.microsoft.com/playwright:v1.58.2-jammy
@@ -55,13 +55,12 @@ spec:
         image: mcr.microsoft.com/playwright:v1.58.2-jammy
       shell: |
         export DB_PATH=/tmp/test-e2e.db
-        export PORT=3000
+        export PORT=3001
         export NODE_ENV=test
         export CI=true
-        export PLAYWRIGHT_BASE_URL=http://localhost:3000
         nohup node src/server.js > /tmp/app.log 2>&1 &
         for i in $(seq 1 60); do
-          curl -sf http://localhost:3000/health > /dev/null 2>&1 && { echo "App ready after ${i}s"; break; }
+          curl -sf http://localhost:3001/health > /dev/null 2>&1 && { echo "App ready after ${i}s"; break; }
           [ $i -eq 60 ] && { echo "App failed to start:"; cat /tmp/app.log; exit 1; }
           sleep 1
         done
